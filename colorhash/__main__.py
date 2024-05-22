@@ -64,6 +64,6 @@ colorizer = PaletteColorizer(palette)
 # pprint.pprint([[hex(c) for c in row] for row in colors])
 
 # Print SVG
-matrix = NibbleMatricizer(w, h).hash_to_matrix(hashdata)
+matrix = NibbleMatricizer(w, h).matricize(hashdata)
 colors = PaletteColorizer(palette).colorize(matrix)
 print(gensvg(colors, 32))

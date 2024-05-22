@@ -11,14 +11,14 @@ class Matricizer(metaclass=abc.ABCMeta):
         self.h = h
 
     @abc.abstractmethod
-    def hash_to_matrix(self, data: bytes) -> Matrix:
+    def matricize(self, data: bytes) -> Matrix:
         """
         Convert a hash to a matrix of given width and height.
         """
 
 
 class NibbleMatricizer(Matricizer):
-    def hash_to_matrix(self, data: bytes) -> Matrix:
+    def matricize(self, data: bytes) -> Matrix:
         """
         Convert a set of bytes to a list of rows of nibbles.
         """
@@ -43,3 +43,7 @@ class NibbleMatricizer(Matricizer):
                 row = []
 
         return cols
+
+
+class PerlinMatricizer(Matricizer):
+    pass
