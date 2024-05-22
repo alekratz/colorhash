@@ -1,9 +1,14 @@
+"SVG-related functions."
 from .colorizer import StrMatrix
 
 
 def gensvg(matrix: StrMatrix, square_size: int) -> str:
     """
     Generate an SVG based on a given matrix.
+
+    :param matrix: the color matrix to generate the SVG for.
+    :param square_size: the size of the squares generated, in pixels.
+    :returns: the full generated SVG as a string.
     """
     h = len(matrix)
     w = len(matrix[0])

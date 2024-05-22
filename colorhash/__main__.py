@@ -1,3 +1,5 @@
+"Generate a graphic based on the hash of an input file."
+
 import argparse
 import hashlib
 from pathlib import Path
@@ -26,6 +28,9 @@ PALETTES = {
 
 
 def main() -> None:
+    "Main function entrypoint."
+    # pylint: disable=invalid-name
+
     MATRIX_CHOICES = {
         "nibble": "Use each nibble (4 bits) of the hash to generate a matrix",
         "randomart": "Use the SSH 'randomart' algorithm to generate a matrix",
