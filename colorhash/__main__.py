@@ -4,7 +4,7 @@ from pathlib import Path
 import sys
 
 from .colorizer import PaletteColorizer
-from .matricizer import NibbleMatricizer, RandomartMatricizer
+from .matricizer import Matricizer, NibbleMatricizer, RandomartMatricizer
 from .svg import gensvg
 
 
@@ -25,7 +25,7 @@ PALETTES = {
 }
 
 
-def main():
+def main() -> None:
     MATRIX_CHOICES = {
         "nibble": "Use each nibble (4 bits) of the hash to generate a matrix",
         "randomart": "Use the SSH 'randomart' algorithm to generate a matrix",

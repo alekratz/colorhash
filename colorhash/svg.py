@@ -1,7 +1,7 @@
-from .matricizer import Matrix
+from .colorizer import StrMatrix
 
 
-def gensvg(matrix: Matrix, square_size: int) -> str:
+def gensvg(matrix: StrMatrix, square_size: int) -> str:
     """
     Generate an SVG based on a given matrix.
     """
