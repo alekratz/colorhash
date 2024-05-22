@@ -1,7 +1,9 @@
 import hashlib
 import sys
 
-from .hash_colorizer import PaletteColorizer
+from .colorizer import PaletteColorizer
+from .matricizer import NibbleMatricizer
+from .svg import gensvg
 
 
 # TODO - WASM compile for embedding directly in HTML
@@ -46,8 +48,8 @@ infile = sys.stdin.buffer
 
 if len(sys.argv) > 1:
     inpath = sys.argv[1]
-    if inpath != '-':
-        infile = open(inpath, 'rb')
+    if inpath != "-":
+        infile = open(inpath, "rb")
 
 
 hashdata = hashlib.file_digest(infile, hash_algo).digest()
@@ -62,4 +64,6 @@ colorizer = PaletteColorizer(palette)
 # pprint.pprint([[hex(c) for c in row] for row in colors])
 
 # Print SVG
-print(colorizer.hash_to_svg(hashdata, w, h, 32))
+matrix = NibbleMatricizer(w, h).hash_to_matrix(hashdata)
+colors = PaletteColorizer(palette).colorize(matrix)
+print(gensvg(colors, 32))
