@@ -53,7 +53,12 @@ def main():
     HASH_CHOICES = ["md5", "sha1", "sha224", "sha256", "sha384", "sha512"]
     EPILOGUE = "\n\n".join([MATRIX_HELP, PALETTE_HELP])
 
+    progname: str = sys.argv[0]
+    if progname.endswith('__main__.py'):
+        progname = 'colorhash'
+
     ap = argparse.ArgumentParser(
+        prog=progname,
         description="Create a piece of art based on the hash of a file.",
         epilog=EPILOGUE,
         formatter_class=argparse.RawDescriptionHelpFormatter,
