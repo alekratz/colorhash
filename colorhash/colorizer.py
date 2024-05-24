@@ -3,6 +3,7 @@ import abc
 from typing import Sequence
 
 from .matricizer import Matrix
+from .palettes import Palette
 
 
 StrMatrix = Sequence[Sequence[str]]
@@ -26,9 +27,6 @@ class Colorizer(metaclass=abc.ABCMeta):
         """
 
 
-Palette = Sequence[str]
-
-
 class PaletteColorizer(Colorizer):
     """
     A palette colorizer.
@@ -41,7 +39,6 @@ class PaletteColorizer(Colorizer):
 
         :param palette: the palette to use for this colorizer.
         """
-        assert len(palette) == 16, "palette must contain exactly 16 colors"
         self.palette = palette
 
     def colorize(self, matrix: Matrix) -> StrMatrix:
