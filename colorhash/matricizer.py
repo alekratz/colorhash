@@ -1,6 +1,8 @@
 "All things that turn a hash into a matrix."
 import abc
-from typing import Sequence
+from typing import Mapping, Sequence
+
+from .palettes import Palette, DEFAULT_PALETTES
 
 
 Matrix = Sequence[Sequence[int]]
@@ -31,6 +33,12 @@ class Matricizer(metaclass=abc.ABCMeta):
 
         :param data: the hash data to turn into a matrix.
         :returns: the matrix converted from the hash data.
+        """
+
+    @abc.abstractmethod
+    def choose_palette(self, data: bytes, palettes: Mapping[str, Palette]) -> Palette:
+        """
+        Choose a palette based on the give data and palettes.
         """
 
 
@@ -81,6 +89,9 @@ class NibbleMatricizer(Matricizer):
 
         return cols
 
+    def choose_palette(self, data: bytes, palettes: Mapping[str, Palette]) -> Palette:
+        return list(palettes.values())[sum(data) % len(palettes)]
+
 
 class RandomartMatricizer(Matricizer):
     """
@@ -127,3 +138,6 @@ class RandomartMatricizer(Matricizer):
                 if rows[r][c] < 0xF:
                     rows[r][c] += 1
         return rows
+
+    def choose_palette(self, _data: bytes, _palettes: Mapping[str, Palette]) -> Palette:
+        return DEFAULT_PALETTES['rainbow']

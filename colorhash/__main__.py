@@ -154,13 +154,6 @@ def main() -> None:
         case _:
             assert False, f"unknown input type {args.input_type}"
 
-    # Choose the palette
-    palette: list[str]
-    if args.palette == "auto":
-        palette = list(DEFAULT_PALETTES.values())[sum(hashdata) % len(DEFAULT_PALETTES)]
-    else:
-        palette = PALETTES[args.palette]
-
     # Choose the dimensions and the matricizer
     matricizer: Matricizer
     match args.matrix:
@@ -170,9 +163,16 @@ def main() -> None:
         case "randomart":
             # 17x9 is what openssh uses
             # TODO - allow configuring dimensions, maybe
-            matricizer = RandomartMatricizer(17, 9)
+            matricizer = RandomartMatricizer(11, 6)
         case _:
             assert False, f"invalid args.matrix: {args.matrix}"
+
+    # Choose the palette
+    palette: list[str]
+    if args.palette == "auto":
+        palette = matricizer.choose_palette(hashdata, PALETTES)
+    else:
+        palette = PALETTES[args.palette]
 
     # Choose the colorizer
     colorizer = PaletteColorizer(palette)
