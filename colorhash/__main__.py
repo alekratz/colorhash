@@ -15,7 +15,7 @@ from .svg import gensvg
 # TODO - WASM compile for embedding directly in HTML
 # TODO - option to add a caption based on the filename
 # TODO - load palettes from a file
-# TODO - HSV color
+# TODO - better dimensions for randomart matricizer
 
 
 def main() -> None:
@@ -31,19 +31,15 @@ def main() -> None:
     )
     PALETTE_CHOICES = [
         "auto",
-        "red",
-        "green",
-        "blue",
-        "black",
-        "cyan",
-        "yellow",
-        "magenta",
-        "white",
-    ]
+    ] + list(PALETTES.keys())
     PALETTE_HELP = "\n".join(
         [
             "PALETTE CHOICES",
-            "    " + ", ".join(PALETTE_CHOICES),
+            '\n'.join(textwrap.wrap(
+                ", ".join(PALETTE_CHOICES),
+                initial_indent="    ",
+                subsequent_indent="    ",
+            )),
         ]
     )
     HASH_CHOICES = ["md5", "sha1", "sha224", "sha256", "sha384", "sha512"]
@@ -55,7 +51,7 @@ def main() -> None:
     INPUT_TYPE_HELP = "INPUT TYPE (-x, --input-type)\n" + "\n".join(
         [f"    {choice} - {desc}" for choice, desc in INPUT_TYPE_CHOICES.items()]
     )
-    EPILOGUE = "\n\n".join([MATRIX_HELP, PALETTE_HELP])
+    EPILOGUE = "\n\n".join([MATRIX_HELP, PALETTE_HELP, INPUT_TYPE_HELP])
 
     progname: str = sys.argv[0]
     if progname.endswith("__main__.py"):
@@ -161,7 +157,7 @@ def main() -> None:
     # Choose the palette
     palette: list[str]
     if args.palette == "auto":
-        palette = list(DEFAULT_PALETTES.values())[sum(hashdata) % 8]
+        palette = list(DEFAULT_PALETTES.values())[sum(hashdata) % len(DEFAULT_PALETTES)]
     else:
         palette = PALETTES[args.palette]
 
