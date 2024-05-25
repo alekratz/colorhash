@@ -102,6 +102,8 @@ DEFAULT_PALETTES = {
     # fully-saturated "rainbow" palette with all of the colors:
     #
     # red, orange, yellow, green, cyan, blue, purple, magenta, pink, gray, rainbow
+    #
+    # Also disabling yellow-light, that one just gives me a headache. It's hard to look at.
 
     "red-light": StaticPalette(hsl_colors(0, 100, range(50, 100))),
     "red-dark": StaticPalette(hsl_colors(0, 100, range(0, 50))),
@@ -109,7 +111,7 @@ DEFAULT_PALETTES = {
     "orange-light": StaticPalette(hsl_colors(30, 100, range(50, 100))),
     "orange-dark": StaticPalette(hsl_colors(30, 100, range(0, 50))),
 
-    "yellow-light": StaticPalette(hsl_colors(60, 100, range(50, 100))),
+    #"yellow-light": StaticPalette(hsl_colors(60, 100, range(50, 100))),
     "yellow-dark": StaticPalette(hsl_colors(60, 100, range(0, 50))),
 
     #"lime-light": StaticPalette(hsl_colors(90, 100, range(50, 100))),
@@ -139,8 +141,8 @@ DEFAULT_PALETTES = {
     "pink-light": StaticPalette(hsl_colors(330, 100, range(50, 100))),
     "pink-dark": StaticPalette(hsl_colors(330, 100, range(0, 50))),
 
-    "gray-dark": StaticPalette(hsl_colors(0, 0, range(0, 50))),
     "gray-light": StaticPalette(hsl_colors(0, 0, range(50, 100))),
+    "gray-dark": StaticPalette(hsl_colors(0, 0, range(0, 50))),
 
     "rainbow": StaticPalette(hsl_colors(range(0, 360), 100, 50)),
 }
