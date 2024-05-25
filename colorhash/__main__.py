@@ -163,7 +163,8 @@ def main() -> None:
         case "randomart":
             # 17x9 is what openssh uses
             # TODO - allow configuring dimensions, maybe
-            matricizer = RandomartMatricizer(11, 6)
+            w, h = RandomartMatricizer.DIMENSIONS[args.hash]
+            matricizer = RandomartMatricizer(w, h)
         case _:
             assert False, f"invalid args.matrix: {args.matrix}"
 

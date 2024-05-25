@@ -1,6 +1,6 @@
 "All things that turn a hash into a matrix."
 import abc
-from typing import Mapping, Sequence
+from typing import Mapping, Sequence, Self
 
 from .palettes import Palette, DEFAULT_PALETTES, GRADIENT_PALETTES, MULTICOLOR_PALETTES
 
@@ -33,6 +33,16 @@ class Matricizer(metaclass=abc.ABCMeta):
 
         :param data: the hash data to turn into a matrix.
         :returns: the matrix converted from the hash data.
+        """
+
+    @staticmethod
+    @abc.abstractmethod
+    def choose_dimensions(hash: str) -> tuple[int, int]:
+        """
+        Choose the dimensions for this matrix based on the hash algorithm.
+
+        :param hash: the hash algorithm being used.
+        :returns: a width and height as a tuple.
         """
 
     def choose_palette(
@@ -96,6 +106,10 @@ class NibbleMatricizer(Matricizer):
 
         return cols
 
+    @staticmethod
+    def choose_dimensions(hash: str) -> tuple[int, int]:
+        return Self.DIMENSIONS[hash]
+
     def choose_palette(
         self, data: bytes, palettes: Mapping[str, Palette] | None = None
     ) -> Palette:
@@ -109,6 +123,15 @@ class RandomartMatricizer(Matricizer):
 
     See: https://github.com/openssh/openssh-portable/blob/fc5dc092830de23767c6ef67baa18310a64ee533/sshkey.c#L1014
     """
+
+    DIMENSIONS = {
+        "md5": (7, 6),
+        "sha1": (7, 6),
+        "sha224": (8, 7),
+        "sha256": (8, 7),
+        "sha384": (11, 10),
+        "sha512": (11, 10),
+    }
 
     def matricize(self, data: bytes) -> Matrix:
         """
@@ -147,6 +170,10 @@ class RandomartMatricizer(Matricizer):
                 if rows[r][c] < 0xF:
                     rows[r][c] += 1
         return rows
+
+    @staticmethod
+    def choose_dimensions(hash: str) -> tuple[int, int]:
+        return self.DIMENSIONS[hash]
 
     def choose_palette(
         self, data: bytes, palettes: Mapping[str, Palette] | None = None
