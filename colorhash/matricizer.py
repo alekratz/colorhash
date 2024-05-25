@@ -2,7 +2,7 @@
 import abc
 from typing import Mapping, Sequence
 
-from .palettes import Palette, DEFAULT_PALETTES
+from .palettes import Palette, DEFAULT_PALETTES, GRADIENT_PALETTES, MULTICOLOR_PALETTES
 
 
 Matrix = Sequence[Sequence[int]]
@@ -35,11 +35,18 @@ class Matricizer(metaclass=abc.ABCMeta):
         :returns: the matrix converted from the hash data.
         """
 
-    @abc.abstractmethod
-    def choose_palette(self, data: bytes, palettes: Mapping[str, Palette]) -> Palette:
+    def choose_palette(
+        self, data: bytes, palettes: Mapping[str, Palette] | None = None
+    ) -> Palette:
         """
         Choose a palette based on the give data and palettes.
+
+        By default, this method will choose the Nth palette from the sum of the data mod the length
+        of all palettes provided (using all palettes as the default).
         """
+        if palettes is None:
+            palettes = DEFAULT_PALETTES
+        return list(palettes.values())[sum(data) % len(palettes)]
 
 
 class NibbleMatricizer(Matricizer):
@@ -89,8 +96,10 @@ class NibbleMatricizer(Matricizer):
 
         return cols
 
-    def choose_palette(self, data: bytes, palettes: Mapping[str, Palette]) -> Palette:
-        return list(palettes.values())[sum(data) % len(palettes)]
+    def choose_palette(
+        self, data: bytes, palettes: Mapping[str, Palette] | None = None
+    ) -> Palette:
+        return super().choose_palette(data, palettes or GRADIENT_PALETTES)
 
 
 class RandomartMatricizer(Matricizer):
@@ -139,5 +148,7 @@ class RandomartMatricizer(Matricizer):
                     rows[r][c] += 1
         return rows
 
-    def choose_palette(self, _data: bytes, _palettes: Mapping[str, Palette]) -> Palette:
-        return DEFAULT_PALETTES['rainbow']
+    def choose_palette(
+        self, data: bytes, palettes: Mapping[str, Palette] | None = None
+    ) -> Palette:
+        return super().choose_palette(data, palettes or MULTICOLOR_PALETTES)

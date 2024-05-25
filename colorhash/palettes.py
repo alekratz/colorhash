@@ -87,7 +87,7 @@ def hsl_colors(hue: HSVRange, sat: HSVRange, light: HSVRange) -> list[str]:
     return [f"hsl({h:.02f},{s:.02f}%,{l:.02f}%)" for h, s, l in zip(hue, sat, light)]
 
 
-DEFAULT_PALETTES = {
+GRADIENT_PALETTES = {
     # Interesting thing with human perception.
     # Between red and yellow, we can perceive "orange". We have a name for it and see it as a
     # distinct color. However, between yellow and green, we see a sickly green; between green and
@@ -143,8 +143,15 @@ DEFAULT_PALETTES = {
 
     "gray-light": StaticPalette(hsl_colors(0, 0, range(50, 100))),
     "gray-dark": StaticPalette(hsl_colors(0, 0, range(0, 50))),
+}
 
+
+MULTICOLOR_PALETTES = {
     "rainbow": StaticPalette(hsl_colors(range(0, 360), 100, 50)),
+}
+
+DEFAULT_PALETTES = {
+    **GRADIENT_PALETTES, **MULTICOLOR_PALETTES,
 }
 
 

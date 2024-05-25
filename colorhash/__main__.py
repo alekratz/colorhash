@@ -170,7 +170,7 @@ def main() -> None:
     # Choose the palette
     palette: list[str]
     if args.palette == "auto":
-        palette = matricizer.choose_palette(hashdata, PALETTES)
+        palette = matricizer.choose_palette(hashdata)
     else:
         palette = PALETTES[args.palette]
 
