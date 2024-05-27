@@ -14,8 +14,7 @@ from .svg import gensvg
 # TODO - WASM compile for embedding directly in HTML
 # TODO - option to add a caption based on the filename
 # TODO - load palettes from a file
-# TODO - better dimensions for randomart matricizer
-
+# TODO - ANSI 24-bit color output
 
 def cli_main() -> None:
     "Main function entrypoint."
