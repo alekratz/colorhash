@@ -11,17 +11,17 @@ No dependencies required, everything is vanilla Python >=3.10.
 
 ## Example usage
 
-### Create art using the default "nibble" art algorithm
+### Create art using the default "nibble" art algorithm, printing out to the terminal
 
-`python -m colorhash infile.dat -o out.svg`
+`python -m colorhash infile.dat`
 
-### Create art using the OpenSSH "randomart" art algorithm
+### Create art using the OpenSSH "randomart" art algorithm, writing to an SVG file
 
-`python -m colorhash infile.dat -o out.svg -m randomart`
+`python -m colorhash infile.dat -y svg -o out.svg -m randomart`
 
 ### Create art using an MD5 hash instead of the default SHA512
 
-`python -m colorhash infile.dat -o out.svg -a md5`
+`python -m colorhash infile.dat -y svg -o out.svg -a md5`
 
 # Motivation
 
