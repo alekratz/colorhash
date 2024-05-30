@@ -7,6 +7,9 @@ matrices=(nibble randomart)
 
 cd "$here/.."
 
+# Additionally, get the full source code output as an "in" file, and use that as an example too.
+find "colorhash" -type f -name '*.py' -exec cat '{}' ';' >examples/fullsource.in
+
 find "examples" -type f -name '*.in' | \
 while read infile; do
     for hash in "${hashes[@]}"; do
