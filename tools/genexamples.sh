@@ -23,4 +23,4 @@ done
 
 # Additionally, create an SVG for the current commit hash
 echo "Generating examples/commithash.svg"
-python3 -m colorhash "$(git rev-parse HEAD)" --input-type hash --hash sha1 --matrix randomart --output-type svg --out examples/commithash.svg
+python3 -m colorhash "$(git rev-parse HEAD)" --input-type hash --hash sha1 --output-type svg --out examples/commithash.svg
