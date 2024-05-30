@@ -15,8 +15,8 @@ while read infile; do
             pngfile="examples/$(basename -s .in "$infile")-$hash-$matrix.png"
             echo "Generating $svgfile"
             python3 -m colorhash "$infile" --output-type svg --out "$svgfile" --hash "$hash" --matrix "$matrix"
-            #echo "Generating $pngfile"
-            #convert "$svgfile" "$pngfile"
+            echo "Generating $pngfile"
+            convert "$svgfile" "$pngfile"
         done
     done
 done
