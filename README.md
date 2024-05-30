@@ -1,6 +1,7 @@
 # colorhash
 
 ![Hash of the full colorhash source code](examples/fullsource-sha512-nibble.svg)
+*Hash of the full colorhash source code*
 
 A tool for creating distinct art based on input data or hash.
 
@@ -39,7 +40,6 @@ checksum of a file from the internet. The goal of this project is to give more f
 pattern recognition so that two extremely similar hashes, maliciously crafted or not, have more
 visual depth to their distinction.
 
-
 # Examples
 
-See the examples directory. TODO : make these into PNGs and embed them in this README file.
+See the examples directory.
