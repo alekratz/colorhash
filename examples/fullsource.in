@@ -1,0 +1,757 @@
+"Generate a graphic based on the hash of an input file."
+from .cli import cli_main
+
+
+if __name__ == '__main__':
+    cli_main()
+"All things that turn a numeric matrix into a colored matrix."
+import abc
+from typing import Sequence
+
+from .color import Color
+from .matricizer import Matrix
+from .palettes import Palette
+
+
+ColorMatrix = Sequence[Sequence[Color]]
+
+
+class Colorizer(metaclass=abc.ABCMeta):
+    """
+    The base Colorizer class.
+
+    A colorizer turns a numeric matrix into a color matrix, colors being represented by strings of
+    HTML colors.
+    """
+
+    @abc.abstractmethod
+    def colorize(self, matrix: Matrix) -> ColorMatrix:
+        """
+        Colorize a matrix.
+
+        :param matrix: the matrix to colorize.
+        :returns: the colorized matrix.
+        """
+
+
+class PaletteColorizer(Colorizer):
+    """
+    A palette colorizer.
+
+    This colorizer will use a palette to colorize its inputs. A palette is 16 colors.
+    """
+    def __init__(self, palette: Palette) -> None:
+        """
+        Create a new palette colorizer for a given palette.
+
+        :param palette: the palette to use for this colorizer.
+        """
+        self.palette = palette
+
+    def colorize(self, matrix: Matrix) -> ColorMatrix:
+        """
+        Colorize the given matrix using this colorizer's palette.
+
+        :param matrix: the matrix to colorize.
+        :returns: the colorized matrix.
+        """
+        return [[self.palette[v] for v in row] for row in matrix]
+"All things that turn a hash into a matrix."
+import abc
+from typing import Mapping, Sequence
+
+from .palettes import Palette, DEFAULT_PALETTES, GRADIENT_PALETTES, MULTICOLOR_PALETTES
+
+
+Matrix = Sequence[Sequence[int]]
+
+
+class Matricizer(metaclass=abc.ABCMeta):
+    """
+    The base Matricizer class.
+
+    A matricizer turns a collection of hash bytes into a matrix of values between 0x0 and 0xf
+    (inclusive). The method by which this is done is up to the matricizer.
+    """
+
+    def __init__(self, w: int, h: int) -> None:
+        """
+        Create a new matricizer for the given dimensions.
+
+        :param w: the width of the output matrix.
+        :param h: the height of hte output matrix.
+        """
+        self.w = w
+        self.h = h
+
+    @abc.abstractmethod
+    def matricize(self, data: bytes) -> Matrix:
+        """
+        Convert a hash to a matrix of given width and height.
+
+        :param data: the hash data to turn into a matrix.
+        :returns: the matrix converted from the hash data.
+        """
+
+    @staticmethod
+    @abc.abstractmethod
+    def choose_dimensions(hash: str) -> tuple[int, int]:
+        """
+        Choose the dimensions for this matrix based on the hash algorithm.
+
+        :param hash: the hash algorithm being used.
+        :returns: a width and height as a tuple.
+        """
+
+    def choose_palette(
+        self, data: bytes, palettes: Mapping[str, Palette] | None = None
+    ) -> Palette:
+        """
+        Choose a palette based on the give data and palettes.
+
+        By default, this method will choose the Nth palette from the sum of the data mod the length
+        of all palettes provided (using all palettes as the default).
+        """
+        if palettes is None:
+            palettes = DEFAULT_PALETTES
+        return list(palettes.values())[sum(data) % len(palettes)]
+
+
+class NibbleMatricizer(Matricizer):
+    """
+    A matricizer that converts a hash based on all of the nibbles in the hash.
+
+    While dimensions are not enforced by this matricizer, it is strongly recommended to use the
+    dimensions provided by the `NibbleMatricizer.DIMENSIONS` member.
+    """
+
+    DIMENSIONS = {
+        "md5": (8, 4),
+        "sha1": (8, 5),
+        "sha224": (8, 7),
+        "sha256": (8, 8),
+        "sha384": (12, 8),
+        "sha512": (16, 8),
+    }
+
+    def matricize(self, data: bytes) -> Matrix:
+        """
+        Convert a set of bytes to a list of rows of nibbles.
+
+        :param data: the hash data to turn into a matrix.
+        :returns: the matrix converted from the hash data.
+        """
+
+        nibbles = []
+        for b in data:
+            top = (b & 0xF0) >> 4
+            bottom = b & 0x0F
+            nibbles += [top, bottom]
+
+        if len(nibbles) != self.w * self.h:
+            raise ValueError(
+                f"input data length ({len(nibbles)}) must match matrix dimensions "
+                f"({self.w}x{self.h} = {self.w * self.h})"
+            )
+
+        cols = []
+        row = []
+        for b in nibbles:
+            row += [b]
+            if len(row) == self.w:
+                cols += [row]
+                row = []
+
+        return cols
+
+    @staticmethod
+    def choose_dimensions(hash: str) -> tuple[int, int]:
+        return NibbleMatricizer.DIMENSIONS[hash]
+
+    def choose_palette(
+        self, data: bytes, palettes: Mapping[str, Palette] | None = None
+    ) -> Palette:
+        return super().choose_palette(data, palettes or GRADIENT_PALETTES)
+
+
+class RandomartMatricizer(Matricizer):
+    """
+    A matricizer that converts hash data into a matrix based on the "randomart" algorithm from
+    ssh-keygen.
+
+    See: https://github.com/openssh/openssh-portable/blob/fc5dc092830de23767c6ef67baa18310a64ee533/sshkey.c#L1014
+    """
+
+    DIMENSIONS = {
+        "md5": (7, 6),
+        "sha1": (7, 6),
+        "sha224": (8, 7),
+        "sha256": (8, 7),
+        "sha384": (11, 10),
+        "sha512": (11, 10),
+    }
+
+    def matricize(self, data: bytes) -> Matrix:
+        """
+        Create a matrix based on the "randomart" algorithm from ssh-keygen.
+
+        The algorithm is as follows:
+
+        1. Choose the point in the middle of the matrix.
+        2. Iterate through the data, two bits at a time.
+        3. If the low bit is set, then move the pointer right. Otherwise, move left.
+        4. If the high bit is set, then move the pointer down. Otherwise, move up.
+        5. If stepping in either direction would move us outside of the matrix, then don't move in
+           that direction.
+        6. At the end of each step, increment the value in the matrix by one.
+
+        :param data: the hash data to turn into a matrix.
+        :returns: the matrix converted from the hash data.
+        """
+
+        rows = [[0] * self.w for _ in range(self.h)]
+        c = self.w // 2
+        r = self.h // 2
+        for value in data:
+            for _ in range(4):
+                if value & 0x1:
+                    c += 1
+                else:
+                    c -= 1
+                if value & 0x2:
+                    r += 1
+                else:
+                    r -= 1
+                c = min(max(c, 0), self.w - 1)
+                r = min(max(r, 0), self.h - 1)
+                # max value is 0xf
+                if rows[r][c] < 0xF:
+                    rows[r][c] += 1
+        return rows
+
+    @staticmethod
+    def choose_dimensions(hash: str) -> tuple[int, int]:
+        return RandomartMatricizer.DIMENSIONS[hash]
+
+    def choose_palette(
+        self, data: bytes, palettes: Mapping[str, Palette] | None = None
+    ) -> Palette:
+        return super().choose_palette(data, palettes or MULTICOLOR_PALETTES)
+"Base color palette definitions."
+import abc
+from typing import Sequence
+
+from .color import Color, HSLColor
+
+
+class Palette(metaclass=abc.ABCMeta):
+    """
+    A 16-color palette.
+
+    All colors must be a `colorhash.Color`.
+    """
+
+    @abc.abstractmethod
+    def choose(self, color: int) -> Color:
+        """
+        Chooses the given color in this palette.
+        """
+
+    def __getitem__(self, color: int) -> Color:
+        return self.choose(color)
+
+
+class StaticPalette(Palette):
+    """
+    A static color palette with discrete colors.
+    """
+
+    def __init__(self, colors: Sequence[Color]) -> None:
+        """
+        Creates a new static color palette.
+
+        :param colors: the colors for this palette. Must be exactly 16 colors.
+        """
+        if len(colors) != 16:
+            raise ValueError(f"palette must have exactly 16 colors (got {len(colors)})")
+        self.colors = colors
+
+    def choose(self, color: int) -> Color:
+        if not isinstance(color, int):
+            raise KeyError("palette color indices must be an integer")
+        return self.colors[color]
+
+
+HSLRange = range | float | int | list[float | int]
+
+
+def quantize(r: range, steps: int = 16) -> list[float]:
+    """
+    Given a range and a number of steps, create a list of numbers starting and ending in the range
+    (inclusive) with that number of steps.
+
+    :param r: the range to quantize.
+    :param steps: the number of steps to use.
+    :returns: a list of the quantized range.
+    """
+    dist = abs(r.stop - r.start)
+    return [r.start + (i * dist / (steps - 1)) for i in range(steps)]
+
+
+def hsl_colors(hue: HSLRange, sat: HSLRange, light: HSLRange) -> list[HSLColor]:
+    """
+    Utility method to create 16 colors using HSL.
+
+    :param hue: the hue, or range of hues, to use for this palette.
+    :param sat: the saturation, or range of saturations, to use for this palette.
+    :param light: the light value, or range of light values, to use for this palette.
+    """
+
+    if isinstance(hue, (float, int)):
+        hue = [hue] * 16
+    elif isinstance(hue, range):
+        hue = quantize(hue)
+    assert len(hue) == 16, "hue values must be a list of 16 elements"
+
+    if isinstance(sat, (float, int)):
+        sat = [sat] * 16
+    elif isinstance(sat, range):
+        sat = quantize(sat)
+    assert len(sat) == 16, "saturation values must be a list of 16 elements"
+
+    if isinstance(light, (float, int)):
+        light = [light] * 16
+    elif isinstance(light, range):
+        light = quantize(light)
+    assert len(light) == 16, "light values must be a list of 16 elements"
+
+    return [HSLColor(round(h), round(s), round(l)) for h, s, l in zip(hue, sat, light)]
+
+
+GRADIENT_PALETTES = {
+    # Interesting thing with human perception.
+    # Between red and yellow, we can perceive "orange". We have a name for it and see it as a
+    # distinct color. However, between yellow and green, we see a sickly green; between green and
+    # cyan, a seafoam green; between cyan and blue, a lighter blue.
+    #
+    # Beside these, I think that between blue and magenta gives a color you could safely call
+    # "purple", and between magenta and red, you get a color you could safely call "pink". It seems
+    # that reds are more distinct to the human eye.
+    #
+    # For this reason, I have decided to pick these palettes as the "defaults", with a "dark" and
+    # "light" variant of each (lightness 0-50%, and 50-100% respectively), with an additional
+    # fully-saturated "rainbow" palette with all of the colors:
+    #
+    # red, orange, yellow, green, cyan, blue, purple, magenta, pink, gray, rainbow
+    #
+    # Also disabling yellow-light, that one just gives me a headache. It's hard to look at.
+
+    "red-light": StaticPalette(hsl_colors(0, 100, range(50, 100))),
+    "red-dark": StaticPalette(hsl_colors(0, 100, range(0, 50))),
+
+    "orange-light": StaticPalette(hsl_colors(30, 100, range(50, 100))),
+    "orange-dark": StaticPalette(hsl_colors(30, 100, range(0, 50))),
+
+    #"yellow-light": StaticPalette(hsl_colors(60, 100, range(50, 100))),
+    "yellow-dark": StaticPalette(hsl_colors(60, 100, range(0, 50))),
+
+    #"lime-light": StaticPalette(hsl_colors(90, 100, range(50, 100))),
+    #"lime-dark": StaticPalette(hsl_colors(90, 100, range(0, 50))),
+
+    "green-light": StaticPalette(hsl_colors(120, 100, range(50, 100))),
+    "green-dark": StaticPalette(hsl_colors(120, 100, range(0, 50))),
+
+    #"seafoam-light": StaticPalette(hsl_colors(150, 100, range(50, 100))),
+    #"seafoam-dark": StaticPalette(hsl_colors(150, 100, range(0, 50))),
+
+    "cyan-light": StaticPalette(hsl_colors(180, 100, range(50, 100))),
+    "cyan-dark": StaticPalette(hsl_colors(180, 100, range(0, 50))),
+
+    #"teal-light": StaticPalette(hsl_colors(210, 100, range(50, 100))),
+    #"teal-dark": StaticPalette(hsl_colors(210, 100, range(0, 50))),
+
+    "blue-light": StaticPalette(hsl_colors(240, 100, range(50, 100))),
+    "blue-dark": StaticPalette(hsl_colors(240, 100, range(0, 50))),
+
+    "purple-light": StaticPalette(hsl_colors(270, 100, range(50, 100))),
+    "purple-dark": StaticPalette(hsl_colors(270, 100, range(0, 50))),
+
+    "magenta-light": StaticPalette(hsl_colors(300, 100, range(50, 100))),
+    "magenta-dark": StaticPalette(hsl_colors(300, 100, range(0, 50))),
+
+    "pink-light": StaticPalette(hsl_colors(330, 100, range(50, 100))),
+    "pink-dark": StaticPalette(hsl_colors(330, 100, range(0, 50))),
+
+    "gray-light": StaticPalette(hsl_colors(0, 0, range(50, 100))),
+    "gray-dark": StaticPalette(hsl_colors(0, 0, range(0, 50))),
+}
+
+
+MULTICOLOR_PALETTES = {
+    "rainbow": StaticPalette(hsl_colors(range(0, 360), 100, 50)),
+}
+
+DEFAULT_PALETTES = {
+    **GRADIENT_PALETTES, **MULTICOLOR_PALETTES,
+}
+
+
+PALETTES = {**DEFAULT_PALETTES}
+import abc
+import colorsys
+import dataclasses
+
+
+class Color(metaclass=abc.ABCMeta):
+    """
+    An abstract color class.
+
+    This can be used to convert any color format into another color format.
+    """
+
+    def to_html_color(self) -> str:
+        """
+        Convert this color to an HTML color.
+
+        This may produce unexpected results if you are expecting an RGB color. If you are expecting
+        RGB, then you should use `color.to_rgb().to_html_color()` instead.
+        """
+
+    @abc.abstractmethod
+    def to_rgb(self) -> "RGBColor":
+        "Convert this color into an RGB color."
+
+    @abc.abstractmethod
+    def to_hsl(self) -> "HSLColor":
+        "Convert this color into an HSL color."
+
+
+@dataclasses.dataclass
+class RGBColor(Color):
+    """
+    An RGB color. Colors are expected to be a floating point value from [0.0-255.0).
+    """
+    r: float
+    g: float
+    b: float
+
+    def to_html_color(self) -> str:
+        r, g, b = round(self.r), round(self.g), round(self.b)
+        return f"#{r:02x}{g:02x}{b:02x}"
+
+    def to_rgb(self) -> "RGBColor":
+        return self
+
+    def to_hsl(self) -> "HSLColor":
+        r = self.r / 255.0
+        g = self.g / 255.0
+        b = self.b / 255.0
+        h, l, s = colorsys.rgb_to_hls(r, g, b)
+        return HSLColor(h * 360.0, s * 100.0, l * 100.0)
+
+
+@dataclasses.dataclass
+class HSLColor(Color):
+    h: float
+    s: float
+    l: float
+
+    def to_html_color(self) -> str:
+        return f"hsl({self.h:.02f},{self.s:.02f}%,{self.l:.02f}%)"
+
+    def to_rgb(self) -> "RGBColor":
+        h = self.h / 360.0
+        s = self.s / 100.0
+        l = self.l / 100.0
+        r, g, b = colorsys.hls_to_rgb(h, l, s)
+        return RGBColor(r * 255.0, g * 255.0, b * 255.0)
+
+
+    def to_hsl(self) -> "HSLColor":
+        return self
+import abc
+
+from .color import Color
+from .colorizer import ColorMatrix
+
+
+class Writer(metaclass=abc.ABCMeta):
+    """
+    Base writer class.
+
+    This is used to write an input colorized matrix to a string, which is then forwarded to the
+    appropriate output.
+    """
+
+    @abc.abstractmethod
+    def write(self, matrix: ColorMatrix) -> str:
+        "Write the color matrix to a string."
+
+
+class ANSIWriter(Writer):
+    def write(self, matrix: ColorMatrix) -> str:
+        ESC = '\x1b'
+        RESET = f"{ESC}[0m"
+        C = "██"
+        def ansi_color(c: Color) -> str:
+            c = c.to_rgb()
+            return f"{ESC}[38;2;{round(c.r)};{round(c.g)};{round(c.b)}m"
+        out = ''
+        for row in matrix:
+            for col in row:
+                out += ansi_color(col)
+                out += C
+            out += "\n"
+        out += RESET
+        return out
+
+
+class SVGWriter(Writer):
+    def __init__(self, square_size: int) -> None:
+        """
+        Create a new SVG writer that uses the given square size.
+
+        :param square_size: the size of the squares generated, in pixels.
+        """
+        self.square_size = square_size
+
+    def write(self, matrix: ColorMatrix) -> str:
+        """
+        Generate an SVG based on a given matrix.
+
+        :param matrix: the color matrix to generate the SVG for.
+        :returns: the full generated SVG as a string.
+        """
+        h = len(matrix)
+        w = len(matrix[0])
+
+        # Start SVG string
+        svg = f'<svg width="{w * self.square_size}" height="{h * self.square_size}" xmlns="http://www.w3.org/2000/svg">\n'
+
+        # Generate grid
+        for r in range(h):
+            for c in range(w):
+                x = c * self.square_size
+                y = r * self.square_size
+                color = matrix[r][c]
+                svg += f'  <rect x="{x}" y="{y}" width="{self.square_size}" height="{self.square_size}" fill="{color.to_html_color()}" />\n'
+
+        # Close SVG string
+        svg += "</svg>"
+        return svg
+
+"Main driver for the colorhash program."
+import argparse
+import hashlib
+from pathlib import Path
+import sys
+import textwrap
+
+from .colorizer import PaletteColorizer
+from .matricizer import Matricizer, NibbleMatricizer, RandomartMatricizer
+from .palettes import Palette, DEFAULT_PALETTES, PALETTES
+from .writer import ANSIWriter, SVGWriter
+
+
+# TODO - WASM compile for embedding directly in HTML
+#      - this may not be an option, sadly. might have to just port it to JS
+# TODO - option to add a caption based on the filename (for SVG)
+# TODO - load palettes from a file
+# TODO - PNG output
+
+
+def cli_main() -> None:
+    "Main function entrypoint."
+    # pylint: disable=invalid-name
+
+    MATRIX_CHOICES = {
+        "nibble": "Use each nibble (4 bits) of the hash to generate a matrix",
+        "randomart": "Use the SSH 'randomart' algorithm to generate a matrix",
+    }
+    MATRIX_HELP = "MATRIX STRATEGY (-m, --matrix)\n" + "\n".join(
+        f"    {choice} - {desc}" for choice, desc in MATRIX_CHOICES.items()
+    )
+    PALETTE_CHOICES = [
+        "auto",
+    ] + list(PALETTES.keys())
+    PALETTE_HELP = "\n".join(
+        [
+            "PALETTE CHOICES",
+            '\n'.join(textwrap.wrap(
+                ", ".join(PALETTE_CHOICES),
+                initial_indent="    ",
+                subsequent_indent="    ",
+            )),
+        ]
+    )
+    HASH_CHOICES = ["md5", "sha1", "sha224", "sha256", "sha384", "sha512"]
+    INPUT_TYPE_CHOICES = {
+        "path": "the input should be treated as a path and data is read from the path",
+        "hash": "the input should be treated as a hexadecimal hash (requires -a or --hash to be supplied)",
+        "data": "the input should be treated as raw data",
+    }
+    INPUT_TYPE_HELP = "INPUT TYPE (-x, --input-type)\n" + "\n".join(
+        [f"    {choice} - {desc}" for choice, desc in INPUT_TYPE_CHOICES.items()]
+    )
+    OUTPUT_TYPE_CHOICES = {
+        "ansi": "the output should be colored for ANSI terminals using 24 bit true color",
+        "svg": "the output should be an SVG format",
+    }
+    OUTPUT_TYPE_HELP = "OUTPUT TYPE (-y, --output-type)\n" + "\n".join(
+        [f"     {choice} - {desc}" for choice, desc in OUTPUT_TYPE_CHOICES.items()]
+    )
+    EPILOGUE = "\n\n".join([MATRIX_HELP, PALETTE_HELP, INPUT_TYPE_HELP, OUTPUT_TYPE_HELP])
+
+    progname: str = sys.argv[0]
+    if progname.endswith("__main__.py"):
+        progname = "colorhash"
+
+    ap = argparse.ArgumentParser(
+        prog=progname,
+        description="Create a piece of art based on the hash of a file.",
+        epilog=EPILOGUE,
+        formatter_class=argparse.RawDescriptionHelpFormatter,
+    )
+
+    ap.add_argument(
+        "input",
+        type=str,
+        default="-",
+        help="The input to use. When acting as a path, set to '-' or blank for STDIN. Use -x or --input-type to control how input is treated. default: -",
+    )
+    ap.add_argument(
+        "-o",
+        "--out",
+        metavar="OUTFILE",
+        type=Path,
+        default="-",
+        help="The output file to use. Set to '-' or blank for STDOUT. default: STDOUT",
+    )
+    ap.add_argument(
+        "-m",
+        "--matrix",
+        metavar="MATRIX",
+        choices=MATRIX_CHOICES.keys(),
+        default="nibble",
+        help="Choose the strategy that turns the hash into a matrix. default: nibble",
+    )
+    ap.add_argument(
+        "-p",
+        "--palette",
+        metavar="PALETTE",
+        choices=PALETTE_CHOICES,
+        default="auto",
+        help="Choose the palette. default: auto",
+    )
+    ap.add_argument(
+        "-a",  # the "a" is for "algorithm" (since -h is taken)
+        "--hash",
+        metavar="ALGORITHM",
+        choices=HASH_CHOICES,
+        # default="sha512",
+        required=False,
+        help="Choose the hash algorithm. default: sha512",
+    )
+    ap.add_argument(
+        "--svg-square-size",
+        metavar="PX",
+        type=int,
+        default=32,
+        help="For SVG outputs, decide how big the output squares are, in pixels. default: 32",
+    )
+    ap.add_argument(
+        "-x",
+        "--input-type",
+        default="path",
+        choices=INPUT_TYPE_CHOICES.keys(),
+        help="Determines how the input should be treated. default: path",
+    )
+    ap.add_argument(
+        "-y",
+        "--output-type",
+        default="ansi",
+        choices=OUTPUT_TYPE_CHOICES.keys(),
+        help="Determines how the output should be generated. default: ansi",
+    )
+    args = ap.parse_args()
+
+    ############################################################################
+    # End arg parsing
+    ############################################################################
+
+    # -a/--hash arg is not required when we're using file and data input types. only required for
+    # hash input type
+    if args.input_type in ("data", "path") and args.hash is None:
+        args.hash = "sha512"
+
+    # Get the hash
+    match args.input_type:
+        case "path":
+            if args.input == "-":
+                infile = sys.stdin.buffer
+            else:
+                # TODO - pretty error message for when the file doesn't exist
+                infile = open(args.input, "rb")
+            # file_digest (I hope) will not load too much into memory
+            hashdata = hashlib.file_digest(infile, args.hash).digest()  # type: ignore
+            # NOTE : previous line has typing ignored because file_digest requires a
+            # "_BytesIOLike | _FileDigestFileObj", both of which look like API leaks. Specifying
+            # infile to be BinaryIO is not enough and causes the same error.
+        case "hash":
+            # TODO - maybe a better error message?
+            if args.hash is None:
+                print(
+                    "ERROR: -a or --hash should be supplied on the command line when using the hash input type",
+                    file=sys.stderr,
+                )
+                raise SystemExit(1)
+            # TODO - pretty error message for malformed input
+            hashdata = bytes([int(byte, 16) for byte in textwrap.wrap(args.input, 2)])
+        case "data":
+            hashdata = hashlib.new(args.hash, args.input.encode()).digest()
+        case _:
+            assert False, f"unknown input type {args.input_type}"
+
+    # Choose the dimensions and the matricizer
+    matricizer: Matricizer
+    match args.matrix:
+        case "nibble":
+            w, h = NibbleMatricizer.DIMENSIONS[args.hash]
+            matricizer = NibbleMatricizer(w, h)
+        case "randomart":
+            # 17x9 is what openssh uses
+            # TODO - allow configuring dimensions, maybe
+            w, h = RandomartMatricizer.DIMENSIONS[args.hash]
+            matricizer = RandomartMatricizer(w, h)
+        case _:
+            assert False, f"invalid args.matrix: {args.matrix}"
+
+    # Choose the palette
+    palette: Palette
+    if args.palette == "auto":
+        palette = matricizer.choose_palette(hashdata)
+    else:
+        palette = PALETTES[args.palette]
+
+    # Choose the colorizer
+    colorizer = PaletteColorizer(palette)
+
+    # Print SVG
+    matrix = matricizer.matricize(hashdata)
+    colors = colorizer.colorize(matrix)
+
+    # Choose the output writer
+    writer: Writer
+    match args.output_type:
+        case "ansi":
+            writer = ANSIWriter()
+        case "svg":
+            writer = SVGWriter(args.svg_square_size)
+
+    output = writer.write(colors)
+
+    if str(args.out) == "-":
+        sys.stdout.write(output)
+    else:
+        args.out.write_text(output)
+
