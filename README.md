@@ -25,6 +25,10 @@ No dependencies required, everything is vanilla Python >=3.10.
 
 `python -m colorhash infile.dat -y svg -o out.svg -a md5`
 
+### Create art in the terminal using the current git commit hash
+
+`python -m colorhash "$(git rev-parse HEAD)" -a sha1`
+
 # Motivation
 
 > If you see the picture is different, the key is different.
@@ -38,6 +42,13 @@ vitally important in matters of security, when you are comparing two key hashes 
 checksum of a file from the internet. The goal of this project is to give more fuel for human
 pattern recognition so that two extremely similar hashes, maliciously crafted or not, have more
 visual depth to their distinction.
+
+## Weaknesses
+
+This is not a perfect solution for hash comparison. Similar hashes may just so happen to choose the
+same color palette, for example. Additionally, if this is appearing on a webpage, caches may
+override the most recent version of the file; this has happened with me and Chrome looking at the
+Github page for this project.
 
 # Examples
 
