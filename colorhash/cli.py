@@ -8,13 +8,13 @@ import textwrap
 from .colorizer import PaletteColorizer
 from .matricizer import Matricizer, NibbleMatricizer, RandomartMatricizer
 from .palettes import Palette, DEFAULT_PALETTES, PALETTES
-from .svg import gensvg
+from .writer import ANSIWriter, SVGWriter
 
 
 # TODO - WASM compile for embedding directly in HTML
 # TODO - option to add a caption based on the filename
 # TODO - load palettes from a file
-# TODO - ANSI 24-bit color output
+
 
 def cli_main() -> None:
     "Main function entrypoint."
@@ -49,7 +49,14 @@ def cli_main() -> None:
     INPUT_TYPE_HELP = "INPUT TYPE (-x, --input-type)\n" + "\n".join(
         [f"    {choice} - {desc}" for choice, desc in INPUT_TYPE_CHOICES.items()]
     )
-    EPILOGUE = "\n\n".join([MATRIX_HELP, PALETTE_HELP, INPUT_TYPE_HELP])
+    OUTPUT_TYPE_CHOICES = {
+        "ansi": "the output should be colored for ANSI terminals using 24 bit true color",
+        "svg": "the output should be an SVG format",
+    }
+    OUTPUT_TYPE_HELP = "OUTPUT TYPE (-y, --output-type)\n" + "\n".join(
+        [f"     {choice} - {desc}" for choice, desc in OUTPUT_TYPE_CHOICES.items()]
+    )
+    EPILOGUE = "\n\n".join([MATRIX_HELP, PALETTE_HELP, INPUT_TYPE_HELP, OUTPUT_TYPE_HELP])
 
     progname: str = sys.argv[0]
     if progname.endswith("__main__.py"):
@@ -102,12 +109,11 @@ def cli_main() -> None:
         help="Choose the hash algorithm. default: sha512",
     )
     ap.add_argument(
-        "-z",
-        "--square-size",
+        "--svg-square-size",
         metavar="PX",
         type=int,
         default=32,
-        help="Decide how big the output squares are, in pixels. default: 32",
+        help="For SVG outputs, decide how big the output squares are, in pixels. default: 32",
     )
     ap.add_argument(
         "-x",
@@ -115,6 +121,13 @@ def cli_main() -> None:
         default="path",
         choices=INPUT_TYPE_CHOICES.keys(),
         help="Determines how the input should be treated. default: path",
+    )
+    ap.add_argument(
+        "-y",
+        "--output-type",
+        default="ansi",
+        choices=OUTPUT_TYPE_CHOICES.keys(),
+        help="Determines how the output should be generated. default: ansi",
     )
     args = ap.parse_args()
 
@@ -182,9 +195,19 @@ def cli_main() -> None:
     # Print SVG
     matrix = matricizer.matricize(hashdata)
     colors = colorizer.colorize(matrix)
-    svg = gensvg(colors, args.square_size)
+
+    # Choose the output writer
+    writer: Writer
+    match args.output_type:
+        case "ansi":
+            writer = ANSIWriter()
+        case "svg":
+            writer = SVGWriter(args.svg_square_size)
+
+    output = writer.write(colors)
+
     if str(args.out) == "-":
-        sys.stdout.write(svg)
+        sys.stdout.write(output)
     else:
-        args.out.write_text(svg)
+        args.out.write_text(output)
 

@@ -11,9 +11,12 @@ find "examples" -type f -name '*.in' | \
 while read infile; do
     for hash in "${hashes[@]}"; do
         for matrix in "${matrices[@]}"; do
-            outfile="examples/$(basename -s .in "$infile")-$hash-$matrix.svg"
-            echo "Generating $outfile"
-            python3 -m colorhash "$infile" --out "$outfile" --hash "$hash" --matrix "$matrix"
+            svgfile="examples/$(basename -s .in "$infile")-$hash-$matrix.svg"
+            pngfile="examples/$(basename -s .in "$infile")-$hash-$matrix.png"
+            echo "Generating $svgfile"
+            python3 -m colorhash "$infile" --output-type svg --out "$svgfile" --hash "$hash" --matrix "$matrix"
+            echo "Generating $pngfile"
+            convert "$svgfile" "$pngfile"
         done
     done
 done
