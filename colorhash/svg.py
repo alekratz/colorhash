@@ -1,8 +1,8 @@
 "SVG-related functions."
-from .colorizer import StrMatrix
+from .colorizer import ColorMatrix
 
 
-def gensvg(matrix: StrMatrix, square_size: int) -> str:
+def gensvg(matrix: ColorMatrix, square_size: int) -> str:
     """
     Generate an SVG based on a given matrix.
 
@@ -22,7 +22,7 @@ def gensvg(matrix: StrMatrix, square_size: int) -> str:
             x = c * square_size
             y = r * square_size
             color = matrix[r][c]
-            svg += f'  <rect x="{x}" y="{y}" width="{square_size}" height="{square_size}" fill="{color}" />\n'
+            svg += f'  <rect x="{x}" y="{y}" width="{square_size}" height="{square_size}" fill="{color.to_html_color()}" />\n'
 
     # Close SVG string
     svg += "</svg>"

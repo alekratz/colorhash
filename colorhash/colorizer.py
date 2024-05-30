@@ -2,11 +2,12 @@
 import abc
 from typing import Sequence
 
+from .color import Color
 from .matricizer import Matrix
 from .palettes import Palette
 
 
-StrMatrix = Sequence[Sequence[str]]
+ColorMatrix = Sequence[Sequence[Color]]
 
 
 class Colorizer(metaclass=abc.ABCMeta):
@@ -18,7 +19,7 @@ class Colorizer(metaclass=abc.ABCMeta):
     """
 
     @abc.abstractmethod
-    def colorize(self, matrix: Matrix) -> StrMatrix:
+    def colorize(self, matrix: Matrix) -> ColorMatrix:
         """
         Colorize a matrix.
 
@@ -41,7 +42,7 @@ class PaletteColorizer(Colorizer):
         """
         self.palette = palette
 
-    def colorize(self, matrix: Matrix) -> StrMatrix:
+    def colorize(self, matrix: Matrix) -> ColorMatrix:
         """
         Colorize the given matrix using this colorizer's palette.
 

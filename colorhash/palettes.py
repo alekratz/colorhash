@@ -1,22 +1,24 @@
 "Base color palette definitions."
 import abc
-from typing import Sequence, Self
+from typing import Sequence
+
+from .color import Color, HSLColor
 
 
 class Palette(metaclass=abc.ABCMeta):
     """
     A 16-color palette.
 
-    All colors must be HTML color strings.
+    All colors must be a `colorhash.Color`.
     """
 
     @abc.abstractmethod
-    def choose(self, color: int) -> str:
+    def choose(self, color: int) -> Color:
         """
         Chooses the given color in this palette.
         """
 
-    def __getitem__(self, color: int) -> str:
+    def __getitem__(self, color: int) -> Color:
         return self.choose(color)
 
 
@@ -25,7 +27,7 @@ class StaticPalette(Palette):
     A static color palette with discrete colors.
     """
 
-    def __init__(self, colors: Sequence[str]) -> None:
+    def __init__(self, colors: Sequence[Color]) -> None:
         """
         Creates a new static color palette.
 
@@ -35,13 +37,13 @@ class StaticPalette(Palette):
             raise ValueError(f"palette must have exactly 16 colors (got {len(colors)})")
         self.colors = colors
 
-    def choose(self, color: int) -> str:
+    def choose(self, color: int) -> Color:
         if not isinstance(color, int):
             raise KeyError("palette color indices must be an integer")
         return self.colors[color]
 
 
-HSVRange = range | float | int | list[float | int]
+HSLRange = range | float | int | list[float | int]
 
 
 def quantize(r: range, steps: int = 16) -> list[float]:
@@ -57,7 +59,7 @@ def quantize(r: range, steps: int = 16) -> list[float]:
     return [r.start + (i * dist / (steps - 1)) for i in range(steps)]
 
 
-def hsl_colors(hue: HSVRange, sat: HSVRange, light: HSVRange) -> list[str]:
+def hsl_colors(hue: HSLRange, sat: HSLRange, light: HSLRange) -> list[HSLColor]:
     """
     Utility method to create 16 colors using HSL.
 
@@ -84,7 +86,7 @@ def hsl_colors(hue: HSVRange, sat: HSVRange, light: HSVRange) -> list[str]:
         light = quantize(light)
     assert len(light) == 16, "light values must be a list of 16 elements"
 
-    return [f"hsl({h:.02f},{s:.02f}%,{l:.02f}%)" for h, s, l in zip(hue, sat, light)]
+    return [HSLColor(round(h), round(s), round(l)) for h, s, l in zip(hue, sat, light)]
 
 
 GRADIENT_PALETTES = {
