@@ -1,5 +1,7 @@
 # colorhash
 
+![Hash of the full colorhash source code](examples/fullsource-sha512-nibble.svg)
+
 A tool for creating distinct art based on input data or hash.
 
 # Usage
