@@ -1,6 +1,6 @@
 # colorhash
 
-![Hash of the full colorhash source code](examples/fullsource-sha512-nibble.svg)
+![Hash of the previous commit hash](examples/commithash.svg)
 
 A tool for creating distinct art based on input data or hash.
 

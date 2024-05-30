@@ -7,9 +7,6 @@ matrices=(nibble randomart)
 
 cd "$here/.."
 
-# Additionally, get the full source code output as an "in" file, and use that as an example too.
-find "colorhash" -type f -name '*.py' -exec cat '{}' ';' >examples/fullsource.in
-
 find "examples" -type f -name '*.in' | \
 while read infile; do
     for hash in "${hashes[@]}"; do
@@ -23,3 +20,7 @@ while read infile; do
         done
     done
 done
+
+# Additionally, create an SVG for the current commit hash
+echo "Generating examples/commithash.svg"
+python3 -m colorhash "$(git rev-parse HEAD)" --input-type hash --hash sha1 --matrix randomart --output-type svg --out examples/commithash.svg
