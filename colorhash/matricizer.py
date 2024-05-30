@@ -1,6 +1,6 @@
 "All things that turn a hash into a matrix."
 import abc
-from typing import Mapping, Sequence, Self
+from typing import Mapping, Sequence
 
 from .palettes import Palette, DEFAULT_PALETTES, GRADIENT_PALETTES, MULTICOLOR_PALETTES
 
@@ -108,7 +108,7 @@ class NibbleMatricizer(Matricizer):
 
     @staticmethod
     def choose_dimensions(hash: str) -> tuple[int, int]:
-        return Self.DIMENSIONS[hash]
+        return NibbleMatricizer.DIMENSIONS[hash]
 
     def choose_palette(
         self, data: bytes, palettes: Mapping[str, Palette] | None = None
@@ -173,7 +173,7 @@ class RandomartMatricizer(Matricizer):
 
     @staticmethod
     def choose_dimensions(hash: str) -> tuple[int, int]:
-        return self.DIMENSIONS[hash]
+        return RandomartMatricizer.DIMENSIONS[hash]
 
     def choose_palette(
         self, data: bytes, palettes: Mapping[str, Palette] | None = None
