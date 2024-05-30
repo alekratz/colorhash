@@ -7,7 +7,7 @@ import textwrap
 
 from .colorizer import PaletteColorizer
 from .matricizer import Matricizer, NibbleMatricizer, RandomartMatricizer
-from .palettes import DEFAULT_PALETTES, PALETTES
+from .palettes import Palette, DEFAULT_PALETTES, PALETTES
 from .svg import gensvg
 
 
@@ -136,7 +136,10 @@ def cli_main() -> None:
                 # TODO - pretty error message for when the file doesn't exist
                 infile = open(args.input, "rb")
             # file_digest (I hope) will not load too much into memory
-            hashdata = hashlib.file_digest(infile, args.hash).digest()
+            hashdata = hashlib.file_digest(infile, args.hash).digest()  # type: ignore
+            # NOTE : previous line has typing ignored because file_digest requires a
+            # "_BytesIOLike | _FileDigestFileObj", both of which look like API leaks. Specifying
+            # infile to be BinaryIO is not enough and causes the same error.
         case "hash":
             # TODO - maybe a better error message?
             if args.hash is None:
@@ -167,7 +170,7 @@ def cli_main() -> None:
             assert False, f"invalid args.matrix: {args.matrix}"
 
     # Choose the palette
-    palette: list[str]
+    palette: Palette
     if args.palette == "auto":
         palette = matricizer.choose_palette(hashdata)
     else:
