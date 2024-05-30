@@ -12,8 +12,10 @@ from .writer import ANSIWriter, SVGWriter
 
 
 # TODO - WASM compile for embedding directly in HTML
-# TODO - option to add a caption based on the filename
+#      - this may not be an option, sadly. might have to just port it to JS
+# TODO - option to add a caption based on the filename (for SVG)
 # TODO - load palettes from a file
+# TODO - PNG output
 
 
 def cli_main() -> None:
