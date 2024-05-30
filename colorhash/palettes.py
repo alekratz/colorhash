@@ -150,6 +150,7 @@ GRADIENT_PALETTES = {
 
 MULTICOLOR_PALETTES = {
     "rainbow": StaticPalette(hsl_colors(range(0, 360), 100, 50)),
+    "rainbow-reverse": StaticPalette(list(reversed(hsl_colors(range(0, 360), 100, 50)))),
 }
 
 DEFAULT_PALETTES = {
