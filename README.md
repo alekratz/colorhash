@@ -2,8 +2,6 @@
 
 ![Hash of the full colorhash source code](examples/fullsource-sha512-nibble.svg)
 
-*Hash of the full colorhash source code*
-
 A tool for creating distinct art based on input data or hash.
 
 # Usage
