@@ -10,6 +10,7 @@ class Color(metaclass=abc.ABCMeta):
     This can be used to convert any color format into another color format.
     """
 
+    @abc.abstractmethod
     def to_html_color(self) -> str:
         """
         Convert this color to an HTML color.

@@ -6,7 +6,7 @@ from .color import Color, HSLColor
 
 
 HSLRange = range | float | int | list[float | int]
-Palette = Sequence[str]
+Palette = Sequence[Color]
 
 
 def quantize(r: range, steps: int = 16) -> list[float]:

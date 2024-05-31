@@ -8,7 +8,7 @@ import textwrap
 from .colorizer import PaletteColorizer
 from .matricizer import Matricizer, NibbleMatricizer, RandomartMatricizer
 from .palettes import Palette, DEFAULT_PALETTES, PALETTES
-from .writer import ANSIWriter, SVGWriter
+from .writer import ANSIWriter, SVGWriter, Writer
 
 
 # TODO - WASM compile for embedding directly in HTML
