@@ -5,45 +5,8 @@ from typing import Sequence
 from .color import Color, HSLColor
 
 
-class Palette(metaclass=abc.ABCMeta):
-    """
-    A 16-color palette.
-
-    All colors must be a `colorhash.Color`.
-    """
-
-    @abc.abstractmethod
-    def choose(self, color: int) -> Color:
-        """
-        Chooses the given color in this palette.
-        """
-
-    def __getitem__(self, color: int) -> Color:
-        return self.choose(color)
-
-
-class StaticPalette(Palette):
-    """
-    A static color palette with discrete colors.
-    """
-
-    def __init__(self, colors: Sequence[Color]) -> None:
-        """
-        Creates a new static color palette.
-
-        :param colors: the colors for this palette. Must be exactly 16 colors.
-        """
-        if len(colors) != 16:
-            raise ValueError(f"palette must have exactly 16 colors (got {len(colors)})")
-        self.colors = colors
-
-    def choose(self, color: int) -> Color:
-        if not isinstance(color, int):
-            raise KeyError("palette color indices must be an integer")
-        return self.colors[color]
-
-
 HSLRange = range | float | int | list[float | int]
+Palette = Sequence[str]
 
 
 def quantize(r: range, steps: int = 16) -> list[float]:
@@ -106,55 +69,56 @@ GRADIENT_PALETTES = {
     # red, orange, yellow, green, cyan, blue, purple, magenta, pink, gray, rainbow
     #
     # Also disabling yellow-light, that one just gives me a headache. It's hard to look at.
-
-    "red-light": StaticPalette(hsl_colors(0, 100, range(50, 100))),
-    "red-dark": StaticPalette(hsl_colors(0, 100, range(0, 50))),
-
-    "orange-light": StaticPalette(hsl_colors(30, 100, range(50, 100))),
-    "orange-dark": StaticPalette(hsl_colors(30, 100, range(0, 50))),
-
-    #"yellow-light": StaticPalette(hsl_colors(60, 100, range(50, 100))),
-    "yellow-dark": StaticPalette(hsl_colors(60, 100, range(0, 50))),
-
-    #"lime-light": StaticPalette(hsl_colors(90, 100, range(50, 100))),
-    #"lime-dark": StaticPalette(hsl_colors(90, 100, range(0, 50))),
-
-    "green-light": StaticPalette(hsl_colors(120, 100, range(50, 100))),
-    "green-dark": StaticPalette(hsl_colors(120, 100, range(0, 50))),
-
-    #"seafoam-light": StaticPalette(hsl_colors(150, 100, range(50, 100))),
-    #"seafoam-dark": StaticPalette(hsl_colors(150, 100, range(0, 50))),
-
-    "cyan-light": StaticPalette(hsl_colors(180, 100, range(50, 100))),
-    "cyan-dark": StaticPalette(hsl_colors(180, 100, range(0, 50))),
-
-    #"teal-light": StaticPalette(hsl_colors(210, 100, range(50, 100))),
-    #"teal-dark": StaticPalette(hsl_colors(210, 100, range(0, 50))),
-
-    "blue-light": StaticPalette(hsl_colors(240, 100, range(50, 100))),
-    "blue-dark": StaticPalette(hsl_colors(240, 100, range(0, 50))),
-
-    "purple-light": StaticPalette(hsl_colors(270, 100, range(50, 100))),
-    "purple-dark": StaticPalette(hsl_colors(270, 100, range(0, 50))),
-
-    "magenta-light": StaticPalette(hsl_colors(300, 100, range(50, 100))),
-    "magenta-dark": StaticPalette(hsl_colors(300, 100, range(0, 50))),
-
-    "pink-light": StaticPalette(hsl_colors(330, 100, range(50, 100))),
-    "pink-dark": StaticPalette(hsl_colors(330, 100, range(0, 50))),
-
-    "gray-light": StaticPalette(hsl_colors(0, 0, range(50, 100))),
-    "gray-dark": StaticPalette(hsl_colors(0, 0, range(0, 50))),
+    #
+    "red-light": hsl_colors(0, 100, range(50, 100)),
+    "red-dark": hsl_colors(0, 100, range(0, 50)),
+    #
+    "orange-light": hsl_colors(30, 100, range(50, 100)),
+    "orange-dark": hsl_colors(30, 100, range(0, 50)),
+    #
+    # "yellow-light": hsl_colors(60, 100, range(50, 100)),
+    "yellow-dark": hsl_colors(60, 100, range(0, 50)),
+    #
+    # "lime-light": hsl_colors(90, 100, range(50, 100)),
+    # "lime-dark": hsl_colors(90, 100, range(0, 50)),
+    #
+    "green-light": hsl_colors(120, 100, range(50, 100)),
+    "green-dark": hsl_colors(120, 100, range(0, 50)),
+    #
+    # "seafoam-light": hsl_colors(150, 100, range(50, 100)),
+    # "seafoam-dark": hsl_colors(150, 100, range(0, 50)),
+    #
+    "cyan-light": hsl_colors(180, 100, range(50, 100)),
+    "cyan-dark": hsl_colors(180, 100, range(0, 50)),
+    #
+    # "teal-light": hsl_colors(210, 100, range(50, 100)),
+    # "teal-dark": hsl_colors(210, 100, range(0, 50)),
+    #
+    "blue-light": hsl_colors(240, 100, range(50, 100)),
+    "blue-dark": hsl_colors(240, 100, range(0, 50)),
+    #
+    "purple-light": hsl_colors(270, 100, range(50, 100)),
+    "purple-dark": hsl_colors(270, 100, range(0, 50)),
+    #
+    "magenta-light": hsl_colors(300, 100, range(50, 100)),
+    "magenta-dark": hsl_colors(300, 100, range(0, 50)),
+    #
+    "pink-light": hsl_colors(330, 100, range(50, 100)),
+    "pink-dark": hsl_colors(330, 100, range(0, 50)),
+    #
+    "gray-light": hsl_colors(0, 0, range(50, 100)),
+    "gray-dark": hsl_colors(0, 0, range(0, 50)),
 }
 
 
 MULTICOLOR_PALETTES = {
-    "rainbow": StaticPalette(hsl_colors(range(0, 360), 100, 50)),
-    "rainbow-reverse": StaticPalette(list(reversed(hsl_colors(range(0, 360), 100, 50)))),
+    "rainbow": hsl_colors(range(0, 360), 100, 50),
+    "rainbow-reverse": list(reversed(hsl_colors(range(0, 360), 100, 50))),
 }
 
 DEFAULT_PALETTES = {
-    **GRADIENT_PALETTES, **MULTICOLOR_PALETTES,
+    **GRADIENT_PALETTES,
+    **MULTICOLOR_PALETTES,
 }
 
 
