@@ -53,3 +53,10 @@ Github page for this project.
 # Examples
 
 See the examples directory.
+
+# License
+
+Code is licensed under GPLv3.
+
+Since images are representation of a specific hash, all of the SVG files in the examples/ directory
+are under CC0/public domain.
