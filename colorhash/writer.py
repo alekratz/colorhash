@@ -1,7 +1,6 @@
 import abc
 
-from .color import Color
-from .colorizer import ColorMatrix
+from .color import Color, ColorMatrix
 
 
 class Writer(metaclass=abc.ABCMeta):
@@ -19,13 +18,15 @@ class Writer(metaclass=abc.ABCMeta):
 
 class ANSIWriter(Writer):
     def write(self, matrix: ColorMatrix) -> str:
-        ESC = '\x1b'
+        ESC = "\x1b"
         RESET = f"{ESC}[0m"
         C = "██"
+
         def ansi_color(c: Color) -> str:
             c = c.to_rgb()
             return f"{ESC}[38;2;{round(c.r)};{round(c.g)};{round(c.b)}m"
-        out = ''
+
+        out = ""
         for row in matrix:
             for col in row:
                 out += ansi_color(col)
@@ -68,4 +69,3 @@ class SVGWriter(Writer):
         # Close SVG string
         svg += "</svg>"
         return svg
-

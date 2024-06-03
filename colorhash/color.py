@@ -1,6 +1,12 @@
 import abc
 import colorsys
 import dataclasses
+from typing import Sequence, TYPE_CHECKING
+
+
+if TYPE_CHECKING:
+    from .palettes import Palette
+    from .matricizer import Matrix
 
 
 class Color(metaclass=abc.ABCMeta):
@@ -33,6 +39,7 @@ class RGBColor(Color):
     """
     An RGB color. Colors are expected to be a floating point value from [0.0-255.0).
     """
+
     r: float
     g: float
     b: float
@@ -68,6 +75,13 @@ class HSLColor(Color):
         r, g, b = colorsys.hls_to_rgb(h, l, s)
         return RGBColor(r * 255.0, g * 255.0, b * 255.0)
 
-
     def to_hsl(self) -> "HSLColor":
         return self
+
+
+ColorMatrix = Sequence[Sequence[Color]]
+
+
+def colorize(palette: "Palette", matrix: "Matrix") -> ColorMatrix:
+    "Converts a matrix of values from [0x0..0xf] to a matrix of colors."
+    return [[palette[v] for v in row] for row in matrix]

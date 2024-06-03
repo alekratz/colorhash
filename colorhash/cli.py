@@ -5,7 +5,7 @@ from pathlib import Path
 import sys
 import textwrap
 
-from .colorizer import PaletteColorizer
+from .color import colorize
 from .matricizer import Matricizer, NibbleMatricizer, RandomartMatricizer
 from .palettes import Palette, DEFAULT_PALETTES, PALETTES
 from .writer import ANSIWriter, SVGWriter, Writer
@@ -16,6 +16,7 @@ from .writer import ANSIWriter, SVGWriter, Writer
 # TODO - option to add a caption based on the filename (for SVG)
 # TODO - load palettes from a file
 # TODO - PNG output
+# TODO - fix Matricizer.choose_dimensions - either get rid of it or use it
 
 
 def cli_main() -> None:
@@ -191,12 +192,9 @@ def cli_main() -> None:
     else:
         palette = PALETTES[args.palette]
 
-    # Choose the colorizer
-    colorizer = PaletteColorizer(palette)
-
-    # Print SVG
+    # Matricize and colorize
     matrix = matricizer.matricize(hashdata)
-    colors = colorizer.colorize(matrix)
+    colors = colorize(palette, matrix)
 
     # Choose the output writer
     writer: Writer
