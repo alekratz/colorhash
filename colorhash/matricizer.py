@@ -169,6 +169,7 @@ class RandomartMatricizer(Matricizer):
                 # max value is 0xf
                 if rows[r][c] < 0xF:
                     rows[r][c] += 1
+                value >>= 2;
         return rows
 
     @staticmethod
