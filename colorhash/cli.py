@@ -14,7 +14,6 @@ from .writer import ANSIWriter, SVGWriter, Writer
 # TODO - option to add a caption based on the filename (for SVG)
 # TODO - load palettes from a file
 # TODO - PNG output
-# TODO - fix Matricizer.choose_dimensions - either get rid of it or use it
 
 
 def cli_main() -> None:

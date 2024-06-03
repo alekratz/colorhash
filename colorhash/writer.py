@@ -26,6 +26,7 @@ class ANSIWriter(Writer):
     """
     ANSI terminal writer. This will output a 24-bit true color string.
     """
+
     def write(self, matrix: ColorMatrix) -> str:
         """
         Write the color matrix to an ANSI string.
@@ -55,6 +56,7 @@ class SVGWriter(Writer):
     """
     SVG string writer.
     """
+
     def __init__(self, square_size: int) -> None:
         """
         Create a new SVG writer that uses the given square size.
