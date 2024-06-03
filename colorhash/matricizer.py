@@ -1,11 +1,33 @@
 "All things that turn a hash into a matrix."
 import abc
+import re
 from typing import Mapping, Sequence
 
 from .palettes import Palette, DEFAULT_PALETTES, GRADIENT_PALETTES, MULTICOLOR_PALETTES
 
 
 Matrix = Sequence[Sequence[int]]
+
+
+def detect_hash_algorithm(hash_or_algo: str | bytes) -> str | None:
+    dimensions: Mapping[int, str] = {
+        32: "md5",
+        40: "sha1",
+        56: "sha224",
+        64: "sha256",
+        96: "sha384",
+        128: "sha512",
+    }
+    if isinstance(hash_or_algo, bytes):
+        return dimensions.get(len(hash_or_algo) * 2)
+
+    hoa = hash_or_algo.lower()
+    if re.match(r"^([0-9a-fA-F]{2})+$", hoa):
+        return dimensions.get(len(hoa))
+    elif hoa in list(dimensions.values()):
+        return hoa
+    else:
+        return None
 
 
 class Matricizer(metaclass=abc.ABCMeta):
@@ -16,16 +38,6 @@ class Matricizer(metaclass=abc.ABCMeta):
     (inclusive). The method by which this is done is up to the matricizer.
     """
 
-    def __init__(self, w: int, h: int) -> None:
-        """
-        Create a new matricizer for the given dimensions.
-
-        :param w: the width of the output matrix.
-        :param h: the height of hte output matrix.
-        """
-        self.w = w
-        self.h = h
-
     @abc.abstractmethod
     def matricize(self, data: bytes) -> Matrix:
         """
@@ -33,16 +45,6 @@ class Matricizer(metaclass=abc.ABCMeta):
 
         :param data: the hash data to turn into a matrix.
         :returns: the matrix converted from the hash data.
-        """
-
-    @staticmethod
-    @abc.abstractmethod
-    def choose_dimensions(hash: str) -> tuple[int, int]:
-        """
-        Choose the dimensions for this matrix based on the hash algorithm.
-
-        :param hash: the hash algorithm being used.
-        :returns: a width and height as a tuple.
         """
 
     def choose_palette(
@@ -84,31 +86,30 @@ class NibbleMatricizer(Matricizer):
         :returns: the matrix converted from the hash data.
         """
 
+        algo = detect_hash_algorithm(data)
+        w, h = self.DIMENSIONS[algo]
+
         nibbles = []
         for b in data:
             top = (b & 0xF0) >> 4
             bottom = b & 0x0F
             nibbles += [top, bottom]
 
-        if len(nibbles) != self.w * self.h:
+        if len(nibbles) != w * h:
             raise ValueError(
                 f"input data length ({len(nibbles)}) must match matrix dimensions "
-                f"({self.w}x{self.h} = {self.w * self.h})"
+                f"({w}x{h} = {w * h})"
             )
 
         cols = []
         row = []
         for b in nibbles:
             row += [b]
-            if len(row) == self.w:
+            if len(row) == w:
                 cols += [row]
                 row = []
 
         return cols
-
-    @staticmethod
-    def choose_dimensions(hash: str) -> tuple[int, int]:
-        return NibbleMatricizer.DIMENSIONS[hash]
 
     def choose_palette(
         self, data: bytes, palettes: Mapping[str, Palette] | None = None
@@ -150,10 +151,12 @@ class RandomartMatricizer(Matricizer):
         :param data: the hash data to turn into a matrix.
         :returns: the matrix converted from the hash data.
         """
+        algo = detect_hash_algorithm(data)
+        w, h = self.DIMENSIONS[algo]
 
-        rows = [[0] * self.w for _ in range(self.h)]
-        c = self.w // 2
-        r = self.h // 2
+        rows = [[0] * w for _ in range(h)]
+        c = w // 2
+        r = h // 2
         for value in data:
             for _ in range(4):
                 if value & 0x1:
@@ -164,17 +167,13 @@ class RandomartMatricizer(Matricizer):
                     r += 1
                 else:
                     r -= 1
-                c = min(max(c, 0), self.w - 1)
-                r = min(max(r, 0), self.h - 1)
+                c = min(max(c, 0), w - 1)
+                r = min(max(r, 0), h - 1)
                 # max value is 0xf
                 if rows[r][c] < 0xF:
                     rows[r][c] += 1
-                value >>= 2;
+                value >>= 2
         return rows
-
-    @staticmethod
-    def choose_dimensions(hash: str) -> tuple[int, int]:
-        return RandomartMatricizer.DIMENSIONS[hash]
 
     def choose_palette(
         self, data: bytes, palettes: Mapping[str, Palette] | None = None

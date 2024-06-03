@@ -438,7 +438,9 @@ disable=raw-checker-failed,
         use-implicit-booleaness-not-comparison-to-zero,
         too-many-locals,
         too-few-public-methods,
-        line-too-long
+        too-many-statements,
+        line-too-long,
+        redefined-builtin,
 
 # Enable the message, report, category or checker with the given id(s). You can
 # either give multiple identifier separated by comma (,) or put this option

@@ -1,3 +1,4 @@
+"Colorhash writer classes"
 import abc
 
 from .color import Color, ColorMatrix
@@ -13,30 +14,47 @@ class Writer(metaclass=abc.ABCMeta):
 
     @abc.abstractmethod
     def write(self, matrix: ColorMatrix) -> str:
-        "Write the color matrix to a string."
+        """
+        Write the color matrix to a string.
+
+        :param matrix: the color matrix to generate the SVG for.
+        :returns: the full generated SVG as a string.
+        """
 
 
 class ANSIWriter(Writer):
+    """
+    ANSI terminal writer. This will output a 24-bit true color string.
+    """
     def write(self, matrix: ColorMatrix) -> str:
-        ESC = "\x1b"
-        RESET = f"{ESC}[0m"
-        C = "██"
+        """
+        Write the color matrix to an ANSI string.
+
+        :param matrix: the color matrix to generate the SVG for.
+        :returns: the full generated SVG as a string.
+        """
+        esc = "\x1b"
+        reset = f"{esc}[0m"
+        c = "██"
 
         def ansi_color(c: Color) -> str:
             c = c.to_rgb()
-            return f"{ESC}[38;2;{round(c.r)};{round(c.g)};{round(c.b)}m"
+            return f"{esc}[38;2;{round(c.r)};{round(c.g)};{round(c.b)}m"
 
         out = ""
         for row in matrix:
             for col in row:
                 out += ansi_color(col)
-                out += C
+                out += c
             out += "\n"
-        out += RESET
+        out += reset
         return out
 
 
 class SVGWriter(Writer):
+    """
+    SVG string writer.
+    """
     def __init__(self, square_size: int) -> None:
         """
         Create a new SVG writer that uses the given square size.

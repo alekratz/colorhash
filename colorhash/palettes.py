@@ -1,5 +1,4 @@
 "Base color palette definitions."
-import abc
 from typing import Sequence
 
 from .color import Color, HSLColor

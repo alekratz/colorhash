@@ -7,12 +7,10 @@ import textwrap
 
 from .color import colorize
 from .matricizer import Matricizer, NibbleMatricizer, RandomartMatricizer
-from .palettes import Palette, DEFAULT_PALETTES, PALETTES
+from .palettes import Palette, PALETTES
 from .writer import ANSIWriter, SVGWriter, Writer
 
 
-# TODO - WASM compile for embedding directly in HTML
-#      - this may not be an option, sadly. might have to just port it to JS
 # TODO - option to add a caption based on the filename (for SVG)
 # TODO - load palettes from a file
 # TODO - PNG output
@@ -36,11 +34,13 @@ def cli_main() -> None:
     PALETTE_HELP = "\n".join(
         [
             "PALETTE CHOICES",
-            '\n'.join(textwrap.wrap(
-                ", ".join(PALETTE_CHOICES),
-                initial_indent="    ",
-                subsequent_indent="    ",
-            )),
+            "\n".join(
+                textwrap.wrap(
+                    ", ".join(PALETTE_CHOICES),
+                    initial_indent="    ",
+                    subsequent_indent="    ",
+                )
+            ),
         ]
     )
     HASH_CHOICES = ["md5", "sha1", "sha224", "sha256", "sha384", "sha512"]
@@ -59,7 +59,9 @@ def cli_main() -> None:
     OUTPUT_TYPE_HELP = "OUTPUT TYPE (-y, --output-type)\n" + "\n".join(
         [f"     {choice} - {desc}" for choice, desc in OUTPUT_TYPE_CHOICES.items()]
     )
-    EPILOGUE = "\n\n".join([MATRIX_HELP, PALETTE_HELP, INPUT_TYPE_HELP, OUTPUT_TYPE_HELP])
+    EPILOGUE = "\n\n".join(
+        [MATRIX_HELP, PALETTE_HELP, INPUT_TYPE_HELP, OUTPUT_TYPE_HELP]
+    )
 
     progname: str = sys.argv[0]
     if progname.endswith("__main__.py"):
@@ -175,13 +177,9 @@ def cli_main() -> None:
     matricizer: Matricizer
     match args.matrix:
         case "nibble":
-            w, h = NibbleMatricizer.DIMENSIONS[args.hash]
-            matricizer = NibbleMatricizer(w, h)
+            matricizer = NibbleMatricizer()
         case "randomart":
-            # 17x9 is what openssh uses
-            # TODO - allow configuring dimensions, maybe
-            w, h = RandomartMatricizer.DIMENSIONS[args.hash]
-            matricizer = RandomartMatricizer(w, h)
+            matricizer = RandomartMatricizer()
         case _:
             assert False, f"invalid args.matrix: {args.matrix}"
 
@@ -210,4 +208,3 @@ def cli_main() -> None:
         sys.stdout.write(output)
     else:
         args.out.write_text(output)
-
