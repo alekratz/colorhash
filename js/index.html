@@ -1,0 +1,105 @@
+<!DOCTYPE html>
+<html>
+    <head>
+        <title>Colorhash</title>
+<style>
+#error {
+    color: #ff0000;
+}
+</style>
+    </head>
+    <body>
+        <div>
+            <p>
+            Create a colorhash image by typing in a hash here
+            </p>
+        </div>
+        <div>
+            <p>
+            <table>
+                <tr>
+                    <td>
+                        <input type="text" style="width:400px;" autocomplete="off" id="inputhash"/><br/>
+                    </td>
+                    <td>
+                    </td>
+                </tr>
+                <tr>
+                    <td>
+                        <input type="radio" id="nibble" name="art" checked="checked" />
+                        <label for="nibble">Nibbles</label>
+                        <input type="radio" id="randomart" name="art" />
+                        <label for="randomart">Randomart</label>
+                    </td>
+                    <td>
+                        <button id="createbutton" onclick="createArt()">Create</button>
+                    </td>
+                </tr>
+            </table>
+            </p>
+        </div>
+        <div id="error">
+        </div>
+        <p>
+            <div id="output">
+            </div>
+        </p>
+
+        <script src="colorhash.js" defer></script>
+        <script>
+            qs = document.querySelector.bind(document);
+
+            function clearError() {
+                qs("#error").innerHTML = '';
+            }
+
+            function setError(error) {
+                qs("#error").innerHTML = `<p>${error}</p>`;
+            }
+
+            function clearOutput() {
+                qs("#output").innerHTML = '';
+            }
+
+            function setOutput(output) {
+                qs("#output").innerHTML = output;
+            }
+
+            function createDownloadLink(svgData) {
+                return "data:image/svg+xml;charset=utf-8," + encodeURIComponent(svgData);
+            }
+
+            function createArt() {
+                clearError();
+                clearOutput();
+                
+                const inputHash = qs("#inputhash").value;
+                let matricizer;
+                if(qs("#nibble").checked) {
+                    matricizer = new NibbleMatricizer();
+                } else if(qs("#randomart").checked) {
+                    matricizer = new RandomartMatricizer();
+                }
+
+                // get matrix
+                let matrix;
+                try {
+                    matrix = matricizer.matricize(inputHash);
+                } catch(e) {
+                    setError(e);
+                    return;
+                }
+
+                // get colors
+                const palette = matricizer.choosePalette(inputHash);
+
+                // create SVG
+                const svg = "<p>" + genSVG(matrix, palette) + "</p>";
+
+                const detectedHash = `<p>Detected hash: ${detectAlgorithm(inputHash)}</p>`;
+                const downloadLink = `<p><a href="${createDownloadLink(svg).toString()}">"Save link as" to download</a></p>`
+                setOutput(detectedHash + downloadLink + svg);
+            }
+        </script>
+    </body>
+</html>
