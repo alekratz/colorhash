@@ -87,6 +87,8 @@ class NibbleMatricizer(Matricizer):
         """
 
         algo = detect_hash_algorithm(data)
+        if algo is None:
+            raise ValueError("unable to determine hash algorithm")
         w, h = self.DIMENSIONS[algo]
 
         nibbles = []
@@ -152,6 +154,8 @@ class RandomartMatricizer(Matricizer):
         :returns: the matrix converted from the hash data.
         """
         algo = detect_hash_algorithm(data)
+        if algo is None:
+            raise ValueError("unable to determine hash algorithm")
         w, h = self.DIMENSIONS[algo]
 
         rows = [[0] * w for _ in range(h)]
