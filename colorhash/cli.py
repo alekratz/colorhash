@@ -53,7 +53,8 @@ def cli_main() -> None:
     )
     OUTPUT_TYPE_CHOICES = {
         "ansi": "the output should be colored for ANSI terminals using 24 bit true color",
-        "svg": "the output should be an SVG format",
+        "svg": "the output should be in SVG format",
+        "png": "the output should be in PNG format",
     }
     OUTPUT_TYPE_HELP = "OUTPUT TYPE (-y, --output-type)\n" + "\n".join(
         [f"     {choice} - {desc}" for choice, desc in OUTPUT_TYPE_CHOICES.items()]
@@ -113,7 +114,7 @@ def cli_main() -> None:
         help="Choose the hash algorithm. default: sha512",
     )
     ap.add_argument(
-        "--svg-square-size",
+        "--square-size",
         metavar="PX",
         type=int,
         default=32,
@@ -199,11 +200,13 @@ def cli_main() -> None:
         case "ansi":
             writer = ANSIWriter()
         case "svg":
-            writer = SVGWriter(args.svg_square_size)
+            writer = SVGWriter(args.square_size)
+        case "png":
+            writer = PNGWriter(args,square_size)
 
     output = writer.write(colors)
 
     if str(args.out) == "-":
-        sys.stdout.write(output)
+        sys.stdout.buffer.write(output)
     else:
-        args.out.write_text(output)
+        args.out.write_bytes(output)
