@@ -50,6 +50,14 @@ same color palette, for example. Additionally, if this is appearing on a webpage
 override the most recent version of the file; this has happened with me and Chrome looking at the
 Github page for this project.
 
+Palette selection is questionable. It's mostly based on the hash itself, but the colors chosen are
+sort of arbitrary, and certain color profiles are omitted based on the author's personal taste. For
+example, the color palette for "light yellow" is omitted because it's hard to look at and
+distinguish, while dark yellow is kept because it doesn't have that problem. If palettes are ever
+removed or added in the future, this will have a cascading effect on palette selection, since this
+is done by taking the sum of all of the bytes in the hash mod the number of palettes available. As
+the software evolves, a colorhash made 5 years ago may have a different look today.
+
 # Examples
 
 See the examples directory.
