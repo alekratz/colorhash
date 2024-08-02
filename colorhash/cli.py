@@ -1,19 +1,17 @@
 "Main driver for the colorhash program."
 import argparse
 import hashlib
-from pathlib import Path
 import sys
 import textwrap
+from pathlib import Path
 
 from .color import colorize
 from .matricizer import Matricizer, NibbleMatricizer, RandomartMatricizer
-from .palettes import Palette, PALETTES
-from .writer import ANSIWriter, SVGWriter, Writer
-
+from .palettes import PALETTES, Palette
+from .writer import ANSIWriter, PNGWriter, SVGWriter, Writer
 
 # TODO - option to add a caption based on the filename (for SVG)
 # TODO - load palettes from a file
-# TODO - PNG output
 
 
 def cli_main() -> None:
@@ -152,7 +150,7 @@ def cli_main() -> None:
                 infile = sys.stdin.buffer
             else:
                 # TODO - pretty error message for when the file doesn't exist
-                infile = open(args.input, "rb")
+                infile = open(args.input, "rb")  # pylint: disable=consider-using-with
             # file_digest (I hope) will not load too much into memory
             hashdata = hashlib.file_digest(infile, args.hash).digest()  # type: ignore
             # NOTE : previous line has typing ignored because file_digest requires a
@@ -202,7 +200,7 @@ def cli_main() -> None:
         case "svg":
             writer = SVGWriter(args.square_size)
         case "png":
-            writer = PNGWriter(args,square_size)
+            writer = PNGWriter(args.square_size)
 
     output = writer.write(colors)
 
