@@ -3,13 +3,16 @@ import abc
 import re
 from typing import Mapping, Sequence
 
-from .palettes import Palette, DEFAULT_PALETTES, GRADIENT_PALETTES, MULTICOLOR_PALETTES
-
+from .palettes import (DEFAULT_PALETTES, GRADIENT_PALETTES,
+                       MULTICOLOR_PALETTES, Palette)
 
 Matrix = Sequence[Sequence[int]]
 
 
 def detect_hash_algorithm(hash_or_algo: str | bytes) -> str | None:
+    """
+    Detect the hash algorithm based on a string.
+    """
     dimensions: Mapping[int, str] = {
         32: "md5",
         40: "sha1",
@@ -22,6 +25,7 @@ def detect_hash_algorithm(hash_or_algo: str | bytes) -> str | None:
         return dimensions.get(len(hash_or_algo) * 2)
 
     hoa = hash_or_algo.lower()
+
     if re.match(r"^([0-9a-fA-F]{2})+$", hoa):
         return dimensions.get(len(hoa))
     elif hoa in list(dimensions.values()):
